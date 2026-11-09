@@ -90,6 +90,7 @@ main {
 }
 
 .card {
+  position: relative;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -98,6 +99,17 @@ main {
 }
 
 .card:hover { border-color: var(--accent); }
+
+.cover {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.cover:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .card h2 {
   margin: 0 0 2px;
@@ -113,6 +125,8 @@ main {
 }
 
 .card p a {
+  position: relative;
+  z-index: 1;
   color: var(--accent);
   text-decoration: none;
 }
@@ -206,6 +220,7 @@ main {
   <p class="sub">Updates automatically every minute.</p>
 
   <section class="card">
+    <a class="cover" href="https://quietpulse.xyz/status/2ef55dc4-ca03-463c-84ec-c39269c26345" aria-label="Open server status"></a>
     <h2>Server</h2>
     <p>Shows whether the server is running and has internet access.</p>
     <div class="row">
@@ -215,6 +230,7 @@ main {
   </section>
 
   <section class="card">
+    <a class="cover" href="https://quietpulse.xyz/status/e0ccf712-17c2-44bc-8f5d-4ca5ec1b9d48" aria-label="Open services status"></a>
     <h2>Services</h2>
     <p>Shows whether the data in the <a href="https://t.me/RomashkaSystems">channel</a> is up to date and being refreshed.</p>
     <div class="row">
