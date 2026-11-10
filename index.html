@@ -59,7 +59,7 @@ body {
 header {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -94,6 +94,7 @@ main {
 }
 
 .card {
+  position: relative;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -103,10 +104,34 @@ main {
 
 .card:hover { border-color: var(--accent); }
 
+.card:has(.card-link:focus-visible) { border-color: var(--accent); }
+
 .card h2 {
   margin: 0 0 2px;
   font-size: 17px;
   font-weight: 600;
+}
+
+.card-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  cursor: pointer;
+}
+
+.card-link:focus-visible {
+  outline: none;
+}
+
+.card-link:focus-visible::after {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .card p {
@@ -117,6 +142,8 @@ main {
 }
 
 .card p a {
+  position: relative;
+  z-index: 1;
   color: var(--accent);
   text-decoration: none;
 }
@@ -263,7 +290,7 @@ main {
   <p class="sub">Updates automatically every minute.</p>
 
   <section class="card">
-    <div class="title"><span class="ico ico-server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></span><h2>Server</h2></div>
+    <div class="title"><span class="ico ico-server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></span><h2><a class="card-link" href="https://quietpulse.xyz/status/2ef55dc4-ca03-463c-84ec-c39269c26345">Server</a></h2></div>
     <p>Shows whether the server is running and has internet access.</p>
     <div class="row">
       <span class="pill" data-state="loading" data-src="https://quietpulse.xyz/api/jobs/2ef55dc4-ca03-463c-84ec-c39269c26345/badge.svg">Checking</span>
@@ -272,7 +299,7 @@ main {
   </section>
 
   <section class="card">
-    <div class="title"><span class="ico ico-services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg></span><h2>Services</h2></div>
+    <div class="title"><span class="ico ico-services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg></span><h2><a class="card-link" href="https://quietpulse.xyz/status/e0ccf712-17c2-44bc-8f5d-4ca5ec1b9d48">Services</a></h2></div>
     <p>Shows whether the data in the <a href="https://t.me/RomashkaSystems">channel</a> is up to date and being refreshed.</p>
     <div class="row">
       <span class="pill" data-state="loading" data-src="https://quietpulse.xyz/api/jobs/e0ccf712-17c2-44bc-8f5d-4ca5ec1b9d48/badge.svg">Checking</span>
