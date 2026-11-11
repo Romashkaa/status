@@ -141,6 +141,8 @@ main {
   line-height: 1.5;
 }
 
+.card p.msg { min-height: 3em; }
+
 .card p a {
   position: relative;
   z-index: 1;
@@ -291,18 +293,18 @@ main {
 
   <section class="card">
     <div class="title"><span class="ico ico-server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></span><h2><a class="card-link" href="https://quietpulse.xyz/status/2ef55dc4-ca03-463c-84ec-c39269c26345">Server</a></h2></div>
-    <p>Shows whether the server is running and has internet access.</p>
+    <p class="msg" aria-live="polite">Checking the server…</p>
     <div class="row">
-      <span class="pill" data-state="loading" data-src="https://quietpulse.xyz/api/jobs/2ef55dc4-ca03-463c-84ec-c39269c26345/badge.svg">Checking</span>
+      <span class="pill" data-state="loading" data-key="server" data-src="https://quietpulse.xyz/api/jobs/2ef55dc4-ca03-463c-84ec-c39269c26345/badge.svg">Checking</span>
       <span class="time"></span>
     </div>
   </section>
 
   <section class="card">
     <div class="title"><span class="ico ico-services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg></span><h2><a class="card-link" href="https://quietpulse.xyz/status/e0ccf712-17c2-44bc-8f5d-4ca5ec1b9d48">Services</a></h2></div>
-    <p>Shows whether the data in the <a href="https://t.me/RomashkaSystems">channel</a> is up to date and being refreshed.</p>
+    <p class="msg" aria-live="polite">Checking the services…</p>
     <div class="row">
-      <span class="pill" data-state="loading" data-src="https://quietpulse.xyz/api/jobs/e0ccf712-17c2-44bc-8f5d-4ca5ec1b9d48/badge.svg">Checking</span>
+      <span class="pill" data-state="loading" data-key="services" data-src="https://quietpulse.xyz/api/jobs/e0ccf712-17c2-44bc-8f5d-4ca5ec1b9d48/badge.svg">Checking</span>
       <span class="time"></span>
     </div>
   </section>
@@ -335,9 +337,31 @@ function parse(svg) {
   return { state: "unknown", label: "Unknown" };
 }
 
+var CH = "https://t.me/RomashkaSystems";
+
+var MESSAGES = {
+  server: {
+    online: "The server is running and reachable, so all services should work as expected.",
+    late: "We haven’t heard from the server in a while, so there may be a problem. Please wait a minute or two while the status updates.",
+    offline: "The server is down for maintenance or a power issue. It will be back soon.",
+    pending: "Waiting for the first check-in from the server.",
+    unknown: 'The status is unavailable at the moment. Check the <a href="' + CH + '">Telegram channel</a> for any announcements about issues.'
+  },
+  services: {
+    online: '<a href="' + CH + '">Channel</a> data is up to date and refreshing normally.',
+    late: "The service missed a scheduled update, so the channel data may be stale. Please wait a minute or two while the status changes to Online or Offline.",
+    offline: "The service that updates the channel is switched off, so the data in the channel (the table) may be outdated.",
+    pending: "Waiting for the first update from the service.",
+    unknown: 'The status is unavailable at the moment. Check the <a href="' + CH + '">Telegram channel</a> to see whether the data is up to date or if there are any announcements about issues.'
+  }
+};
+
 function apply(pill, result) {
   pill.dataset.state = result.state;
   pill.textContent = result.label;
+  var msg = pill.closest(".card").querySelector(".msg");
+  var text = (MESSAGES[pill.dataset.key] || {})[result.state];
+  if (msg && text) msg.innerHTML = text;
   var time = pill.parentNode.querySelector(".time");
   time.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
