@@ -10,18 +10,21 @@
   --panel: #ffffff;
   --fg: #1d1d1f;
   --muted: #6e6e73;
-  --line: rgba(60, 60, 67, .2);
+  --line: rgba(60, 60, 67, .16);
   --mat: rgba(255, 255, 255, .72);
   --blur: blur(20px) saturate(180%);
   --accent: #0a84ff;
-  --hover: #f0f0f3;
   --green: #34c759;
   --orange: #ff9500;
   --red: #ff3b30;
   --gray: #8e8e93;
   --blue: #0a84ff;
   --pink: #ff2d55;
-  --indigo: #5856d6;
+  --purple: #af52de;
+  --glass: rgba(255, 255, 255, .55);
+  --glass-edge: rgba(255, 255, 255, .8);
+  --thumb: rgba(60, 60, 67, .12);
+  --shadow: 0 14px 36px rgba(0, 0, 0, .14), 0 2px 8px rgba(0, 0, 0, .08);
   color-scheme: light dark;
 }
 
@@ -31,355 +34,596 @@
     --panel: #1c1c1e;
     --fg: #f5f5f7;
     --muted: #98989f;
-    --line: rgba(255, 255, 255, .16);
+    --line: rgba(255, 255, 255, .14);
     --mat: rgba(28, 28, 30, .72);
-    --hover: #2a2a2d;
     --green: #30d158;
     --orange: #ff9f0a;
     --red: #ff453a;
     --gray: #98989d;
-    --blue: #0a84ff;
     --pink: #ff375f;
-    --indigo: #5e5ce6;
+    --purple: #bf5af2;
+    --glass: rgba(50, 50, 54, .5);
+    --glass-edge: rgba(255, 255, 255, .16);
+    --thumb: rgba(255, 255, 255, .16);
+    --shadow: 0 14px 36px rgba(0, 0, 0, .55), 0 2px 8px rgba(0, 0, 0, .4);
   }
 }
 
 * { box-sizing: border-box; }
-
+[hidden] { display: none !important; }
 html, body { margin: 0; }
 
 body {
   background: var(--bg);
   color: var(--fg);
-  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   min-height: 100vh;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+  -webkit-font-smoothing: antialiased;
 }
 
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── header ── */
 header {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: 3;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: calc(8px + env(safe-area-inset-top, 0px)) 14px 8px;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px;
   background: var(--mat);
   -webkit-backdrop-filter: var(--blur);
   backdrop-filter: var(--blur);
   border-bottom: 1px solid var(--line);
 }
 
-header h1 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-}
+header h1 { margin: 0; font-size: 18px; font-weight: 700; }
 
-main {
-  width: 100%;
-  max-width: 460px;
-  margin: 0 auto;
-  padding: 24px 16px 40px;
+.actions { display: flex; align-items: center; gap: 16px; }
+
+.link {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color .2s ease, opacity .2s ease;
+}
+.link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.link-channel { color: var(--accent); }
+
+main { width: 100%; }
+
+.panel.enter { animation: rise .4s cubic-bezier(.2, .8, .2, 1); }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+
+/* ── server tab: full-width hero ── */
+.hero {
+  --c: var(--gray);
+  position: relative;
+  isolation: isolate;
+  min-height: calc(100vh - 240px);
+  min-height: calc(100svh - 240px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 24px;
 }
+.hero[data-state="online"]  { --c: var(--green); }
+.hero[data-state="late"]    { --c: var(--orange); }
+.hero[data-state="offline"] { --c: var(--red); }
+.hero[data-state="pending"] { --c: var(--blue); }
+.hero[data-state="maintenance"] { --c: var(--purple); }
 
-.sub {
-  margin: 0 4px 6px;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.card {
-  position: relative;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 20px;
-  transition: border-color .2s ease;
-}
-
-.card:hover { border-color: var(--accent); }
-
-.card:has(.card-link:focus-visible) { border-color: var(--accent); }
-
-.card h2 {
-  margin: 0 0 2px;
-  font-size: 17px;
-  font-weight: 600;
-}
-
-.card-link {
-  color: inherit;
-  text-decoration: none;
-}
-
-.card-link::after {
+.hero::before {
   content: "";
   position: absolute;
   inset: 0;
-  border-radius: inherit;
-  cursor: pointer;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(60% 55% at 50% 38%, color-mix(in srgb, var(--c) 20%, transparent), transparent 72%);
 }
 
-.card-link:focus-visible {
-  outline: none;
+.orb {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 16%, transparent);
+  box-shadow: 0 0 0 12px color-mix(in srgb, var(--c) 7%, transparent);
+  margin-bottom: 36px;
+}
+.orb svg { width: 52px; height: 52px; }
+.hero[data-state="loading"] .orb { animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+
+.big {
+  margin: 0;
+  font-size: clamp(36px, 8vw, 68px);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -.03em;
 }
 
-.card-link:focus-visible::after {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
-
-.card p {
-  margin: 0 0 16px;
+.lead {
+  max-width: 34em;
+  margin: 18px 0 0;
   color: var(--muted);
-  font-size: 14px;
+  font-size: clamp(16px, 2.4vw, 19px);
   line-height: 1.5;
 }
 
-.card p.msg { min-height: 3em; }
-
-.card p a {
-  position: relative;
-  z-index: 1;
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.card p a:hover { text-decoration: underline; }
-
-.title {
+.meta {
   display: flex;
   align-items: center;
+  gap: 14px;
+  margin-top: 28px;
+  font-size: 14px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.meta a { font-weight: 600; }
+
+/* ── services tab ── */
+.wrap { max-width: 600px; margin: 0 auto; padding: 28px 16px 8px; }
+
+.wrap h2 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -.025em;
+}
+.summary { margin: 6px 0 20px; color: var(--muted); font-size: 16px; }
+
+.note {
+  display: flex;
   gap: 12px;
-  margin-bottom: 10px;
+  align-items: flex-start;
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--orange) 15%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--orange) 30%, transparent);
 }
+.note svg { flex: none; width: 20px; height: 20px; margin-top: 1px; color: var(--orange); }
 
-.title h2 { margin: 0; }
-
-.ico {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  color: var(--tile, var(--blue));
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  overflow: hidden;
 }
-
-.ico svg { width: 26px; height: 26px; }
-
-.ico-server { --tile: var(--blue); }
-.ico-services { --tile: var(--indigo); }
-
-.row {
+.item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 14px 18px;
+  font-size: 16px;
 }
+.item + .item { border-top: 1px solid var(--line); }
+.item .nm { min-width: 0; overflow-wrap: anywhere; }
+.item .nm a { color: inherit; }
+.item .nm a::after { content: "↗"; margin-left: 6px; font-size: .8em; color: var(--muted); }
+.item .nm a:hover { color: var(--accent); text-decoration: none; }
 
-.pill {
+.tag {
   --c: var(--gray);
+  flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
+  gap: 7px;
+  padding: 4px 12px;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--c);
-  background: color-mix(in srgb, var(--c) 16%, transparent);
-  transition: color .3s ease, background-color .3s ease;
+  background: color-mix(in srgb, var(--c) 15%, transparent);
 }
+.tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.tag[data-g="available"] { --c: var(--green); }
+.tag[data-g="updating"]  { --c: var(--orange); }
+.tag[data-g="issue"]     { --c: var(--red); }
 
-.pill::before {
+.legend { margin: 16px 6px 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.legend li + li { margin-top: 4px; }
+.legend b { color: var(--fg); font-weight: 600; }
+.stamp { margin: 14px 6px 0; color: var(--muted); font-size: 13px; }
+
+.skel { height: 52px; }
+.skel + .skel { border-top: 1px solid var(--line); }
+.skel::after {
   content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentColor;
+  display: block;
+  width: 40%;
+  height: 12px;
+  margin: 20px 18px;
+  border-radius: 6px;
+  background: var(--line);
+  animation: pulse 1.4s ease-in-out infinite;
 }
 
-.pill[data-state="online"] { --c: var(--green); }
-.pill[data-state="late"] { --c: var(--orange); }
-.pill[data-state="offline"] { --c: var(--red); }
-.pill[data-state="pending"] { --c: var(--blue); }
-.pill[data-state="unknown"] { --c: var(--gray); }
-.pill[data-state="loading"] { --c: var(--gray); }
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 44px 24px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+.empty .orb { --c: var(--gray); width: 76px; height: 76px; margin-bottom: 24px; box-shadow: 0 0 0 9px color-mix(in srgb, var(--c) 7%, transparent); }
+.empty .orb svg { width: 38px; height: 38px; }
+.empty.off .orb { --c: var(--red); }
+.empty.maint .orb { --c: var(--purple); }
+.empty h3 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
+.empty p { margin: 10px 0 0; max-width: 26em; color: var(--muted); font-size: 15px; }
 
-.pill[data-state="loading"]::before { animation: pulse 1.2s ease-in-out infinite; }
-
-@keyframes pulse {
-  50% { opacity: .3; }
+/* ── dock ── */
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: calc(100% - 32px);
+  padding: 5px;
+  border-radius: 999px;
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
+  backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .dock { background: var(--panel); }
 }
 
-.time {
-  color: var(--muted);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
+.thumb {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc((100% - 10px) / 2);
+  border-radius: 999px;
+  background: var(--thumb);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
+  transition: transform .45s cubic-bezier(.3, 1.25, .5, 1);
 }
+.dock[data-active="services"] .thumb { transform: translateX(100%); }
 
-.btn {
-  display: inline-flex;
+.dock button {
+  position: relative;
+  z-index: 1;
+  display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  min-width: 128px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
   font: inherit;
   font-size: 14px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--accent);
-  background: var(--accent);
-  color: #fff;
   font-weight: 600;
-  text-decoration: none;
-  transition: filter .2s ease;
+  cursor: pointer;
+  transition: color .25s ease;
 }
-
-.btn svg {
-  width: 15px;
-  height: 15px;
-  margin-right: 6px;
-  flex: none;
-}
-
-.btn:hover { filter: brightness(1.1); }
-
-.feedback {
-  display: flex;
-  justify-content: center;
-  margin-top: 8px;
-}
-
-.btn-report {
-  padding: 8px 18px;
-  border-color: transparent;
-  color: var(--pink);
-  background: color-mix(in srgb, var(--pink) 14%, var(--panel));
-  transition: background-color .2s ease, filter .2s ease;
-}
-
-.btn-report:hover {
-  filter: none;
-  background: color-mix(in srgb, var(--pink) 22%, var(--panel));
-}
-
-.btn-report:focus-visible {
-  outline-color: var(--pink);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+.dock button svg { width: 20px; height: 20px; flex: none; }
+.dock button[aria-selected="true"] { color: var(--accent); }
+.dock button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .card, .pill, .btn { transition: none; }
-  .pill[data-state="loading"]::before { animation: none; }
+  .panel.enter, .orb, .skel::after { animation: none !important; }
+  .thumb, .dock button, .link { transition: none; }
 }
 </style>
 </head>
 <body>
 <header>
   <h1>Server status</h1>
-  <a class="btn" href="https://t.me/RomashkaSystems"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4 18-7z"/></svg>Channel</a>
+  <div class="actions">
+    <a class="link" href="https://forms.gle/M2RTTSPE8Lpu8Dcc8" target="_blank" rel="noopener noreferrer">Feedback</a>
+    <a class="link link-channel" href="https://t.me/RomashkaSystems">Channel</a>
+  </div>
 </header>
 
 <main>
-  <p class="sub">Updates automatically every minute.</p>
-
-  <section class="card">
-    <div class="title"><span class="ico ico-server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></span><h2><a class="card-link" href="https://quietpulse.xyz/status/2ef55dc4-ca03-463c-84ec-c39269c26345">Server</a></h2></div>
-    <p class="msg" aria-live="polite">Checking the server…</p>
-    <div class="row">
-      <span class="pill" data-state="loading" data-key="server" data-src="https://quietpulse.xyz/api/jobs/2ef55dc4-ca03-463c-84ec-c39269c26345/badge.svg">Checking</span>
-      <span class="time"></span>
+  <section class="panel" id="panel-server" role="tabpanel" aria-labelledby="tab-server">
+    <div class="hero" id="hero" data-state="loading">
+      <div class="orb" id="orb" aria-hidden="true"></div>
+      <h2 class="big" id="hero-title">Checking server…</h2>
+      <p class="lead" id="hero-msg" aria-live="polite">Checking the server…</p>
+      <div class="meta">
+        <span id="hero-time"></span>
+        <a href="https://quietpulse.xyz/status/2ef55dc4-ca03-463c-84ec-c39269c26345">Details</a>
+      </div>
     </div>
   </section>
 
-  <section class="card">
-    <div class="title"><span class="ico ico-services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg></span><h2><a class="card-link" href="https://quietpulse.xyz/status/e0ccf712-17c2-44bc-8f5d-4ca5ec1b9d48">Services</a></h2></div>
-    <p class="msg" aria-live="polite">Checking the services…</p>
-    <div class="row">
-      <span class="pill" data-state="loading" data-key="services" data-src="https://quietpulse.xyz/api/jobs/e0ccf712-17c2-44bc-8f5d-4ca5ec1b9d48/badge.svg">Checking</span>
-      <span class="time"></span>
+  <section class="panel" id="panel-services" role="tabpanel" aria-labelledby="tab-services" hidden>
+    <div class="wrap">
+      <h2>Services</h2>
+      <p class="summary" id="svc-summary">Checking the services…</p>
+      <div id="svc-body"></div>
     </div>
   </section>
 
-  <div class="feedback">
-    <a
-      class="btn btn-report"
-      href="https://forms.gle/M2RTTSPE8Lpu8Dcc8"
-      target="_blank"
-      rel="noopener noreferrer"
-    ><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l9.5 16.5h-19L12 3.5z"/><path d="M12 10v4.5M12 17.5h.01"/></svg>Report an issue</a>
-  </div>
 </main>
 
+<nav class="dock" id="dock" role="tablist" aria-label="Sections" data-active="server">
+  <span class="thumb" aria-hidden="true"></span>
+  <button type="button" role="tab" id="tab-server" data-tab="server" aria-selected="true" aria-controls="panel-server"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>Server</button>
+  <button type="button" role="tab" id="tab-services" data-tab="services" aria-selected="false" aria-controls="panel-services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 12.5l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>Services</button>
+</nav>
+
 <script>
+var CH = "https://t.me/RomashkaSystems";
+var API_URL  = "https://api.github.com/repos/Romashkaa/status-data/contents/services.json?ref=main";
+var DATA_URL = "https://raw.githubusercontent.com/Romashkaa/status-data/main/services.json";
+
+var JOBS = {
+  server: "https://quietpulse.xyz/api/jobs/2ef55dc4-ca03-463c-84ec-c39269c26345/badge.svg",
+  bot:    "https://quietpulse.xyz/api/jobs/e0ccf712-17c2-44bc-8f5d-4ca5ec1b9d48/badge.svg"
+};
+
 var STATES = [
-  { re: /\bhealthy\b|\bok\b|\bup\b/i, state: "online", label: "Online" },
-  { re: /\blate\b|\bdelayed\b/i, state: "late", label: "Delayed" },
-  { re: /\bmissing\b|\bdown\b|\bfailed\b|\bmissed\b/i, state: "offline", label: "Offline" },
-  { re: /\bnew\b|\bwaiting\b|\bpending\b/i, state: "pending", label: "Waiting" },
-  { re: /\bunknown\b/i, state: "unknown", label: "Unknown" }
+  { re: /\bhealthy\b|\bok\b|\bup\b/i, state: "online" },
+  { re: /\blate\b|\bdelayed\b/i, state: "late" },
+  { re: /\bmissing\b|\bdown\b|\bfailed\b|\bmissed\b/i, state: "offline" },
+  { re: /\bnew\b|\bwaiting\b|\bpending\b/i, state: "pending" },
+  { re: /\bunknown\b/i, state: "unknown" }
 ];
 
 function parse(svg) {
   var doc = new DOMParser().parseFromString(svg, "image/svg+xml");
   var text = (doc.documentElement.textContent || "").replace(/\s+/g, " ");
   for (var i = 0; i < STATES.length; i++) {
-    if (STATES[i].re.test(text)) return STATES[i];
+    if (STATES[i].re.test(text)) return STATES[i].state;
   }
-  return { state: "unknown", label: "Unknown" };
+  return "unknown";
 }
 
-var CH = "https://t.me/RomashkaSystems";
+var gate = { server: "loading", bot: "loading" };
+var checkedAt = { server: null, bot: null };
+var svcData = null, svcFailed = false;
 
-var MESSAGES = {
-  server: {
-    online: "The server is running and reachable, so all services should work as expected.",
-    late: "We haven’t heard from the server in a while, so there may be a problem. Please wait a minute or two while the status updates.",
-    offline: "The server is down for maintenance or a power issue. It will be back soon.",
-    pending: "Waiting for the first check-in from the server.",
-    unknown: 'The status is unavailable at the moment. Check the <a href="' + CH + '">Telegram channel</a> for any announcements about issues.'
-  },
-  services: {
-    online: '<a href="' + CH + '">Channel</a> data is up to date and refreshing normally.',
-    late: "The service missed a scheduled update, so the channel data may be stale. Please wait a minute or two while the status changes to Online or Offline.",
-    offline: "The service that updates the channel is switched off, so the data in the channel (the table) may be outdated.",
-    pending: "Waiting for the first update from the service.",
-    unknown: 'The status is unavailable at the moment. Check the <a href="' + CH + '">Telegram channel</a> to see whether the data is up to date or if there are any announcements about issues.'
-  }
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+}
+function icon(paths) {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + paths + "</svg>";
+}
+
+/* ── server tab ── */
+var ICONS = {
+  online:  icon('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
+  late:    icon('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  offline: icon('<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>'),
+  pending: icon('<path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="3"/>'),
+  maintenance: icon('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),
+  unknown: icon('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7"/><path d="M12 17h.01"/>'),
+  loading: icon('<path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="3"/>')
 };
 
-function apply(pill, result) {
-  pill.dataset.state = result.state;
-  pill.textContent = result.label;
-  var msg = pill.closest(".card").querySelector(".msg");
-  var text = (MESSAGES[pill.dataset.key] || {})[result.state];
-  if (msg && text) msg.innerHTML = text;
-  var time = pill.parentNode.querySelector(".time");
-  time.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+var SERVER_UI = {
+  loading: ["Checking server…", "Checking the server…"],
+  online:  ["Server is online", "The server is running and reachable, so all services should work as expected."],
+  late:    ["Server is delayed", "We haven’t heard from the server in a while, so there may be a problem. Please wait a minute or two while the status updates."],
+  offline: ["Server is offline", 'We’ve lost contact with the server, and this was not a planned shutdown. It may be a power or network issue. Check the <a href="' + CH + '">Telegram channel</a> for updates.'],
+  maintenance: ["Technical maintenance", 'The server is temporarily stopped for planned maintenance and will be back soon. News and updates are in the <a href="' + CH + '">Telegram channel</a>.'],
+  pending: ["Waiting for server", "Waiting for the first check-in from the server."],
+  unknown: ["Status unknown", 'The status is unavailable at the moment. Check the <a href="' + CH + '">Telegram channel</a> for any announcements about issues.']
+};
+
+function supervisorStopped() {
+  return !!svcData && (svcData.supervisor === "stopped" || svcData.supervisor === "stopping");
 }
 
-function load(pill) {
+function serverState() {
+  var st = gate.server;
+  if (st === "offline" || st === "late" || st === "unknown") {
+    if (!svcData && !svcFailed) return "loading";
+    if (supervisorStopped()) return "maintenance";
+  }
+  return st;
+}
+
+function renderServer() {
+  var st = serverState(), ui = SERVER_UI[st] || SERVER_UI.unknown;
+  $("hero").dataset.state = st;
+  $("orb").innerHTML = ICONS[st] || ICONS.unknown;
+  $("hero-title").textContent = ui[0];
+  $("hero-msg").innerHTML = ui[1];
+  $("hero-time").textContent = checkedAt.server ? "Checked " + checkedAt.server : "";
+}
+
+/* ── services tab ── */
+var GROUPS = {
+  available:   ["Available",   "this service is working normally."],
+  updating:    ["Updating",    "this service will be back shortly."],
+  issue:       ["Issue",       "some users may be experiencing problems with this service."],
+  unavailable: ["Unavailable", "this service is not available right now."]
+};
+var ORDER = ["available", "updating", "issue", "unavailable"];
+
+var WARN = icon('<path d="M12 3.5l9.5 16.5h-19L12 3.5z"/><path d="M12 10v4.5M12 17.5h.01"/>');
+
+function emptyState(kind, title, text) {
+  var ic = kind === "off" ? ICONS.offline : kind === "maint" ? ICONS.maintenance : ICONS.unknown;
+  return '<div class="empty' + (kind ? " " + kind : "") + '"><div class="orb" aria-hidden="true">' +
+    ic + "</div><h3>" + title + "</h3><p>" + text + "</p></div>";
+}
+
+function note(text) {
+  return '<div class="note" role="status">' + WARN + "<span>" + text + "</span></div>";
+}
+
+function stampText() {
+  if (!svcData || !svcData.changed_at) return "";
+  var d = new Date(svcData.changed_at * 1000);
+  return "Last change: " + d.toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+function renderServices() {
+  var body = $("svc-body"), sum = $("svc-summary");
+  var bot = gate.bot, srv = gate.server;
+
+  if (bot === "loading" || srv === "loading" || (!svcData && !svcFailed)) {
+    sum.textContent = "Checking the services…";
+    body.innerHTML = '<ul class="list" aria-hidden="true"><li class="skel"></li><li class="skel"></li><li class="skel"></li><li class="skel"></li></ul>';
+    return;
+  }
+
+  if (supervisorStopped() && !(bot === "online" && srv === "online")) {
+    sum.textContent = "Services are temporarily paused.";
+    body.innerHTML = emptyState("maint", "Technical maintenance",
+      'The server is stopped for planned work and will be back soon. News and updates are in the <a href="' + CH + '">Telegram channel</a>.') +
+      (stampText() ? '<p class="stamp">' + stampText() + "</p>" : "");
+    return;
+  }
+
+  if (bot === "offline" || srv === "offline") {
+    sum.textContent = "Services are unavailable.";
+    body.innerHTML = emptyState("off", "The server is not responding",
+      'This was not a planned shutdown, so the list below can’t be trusted and all services are treated as unavailable. Check the <a href="' + CH + '">Telegram channel</a> for updates.');
+    return;
+  }
+
+  var items = svcData && Array.isArray(svcData.services) ? svcData.services : [];
+  if (!items.length) {
+    sum.textContent = "Service data is unavailable.";
+    body.innerHTML = emptyState("", "No data right now",
+      'Check the <a href="' + CH + '">Telegram channel</a> for the latest status.');
+    return;
+  }
+
+  var warn = "";
+  if (bot === "late") {
+    warn = "The service that updates this list missed a scheduled update, so the data may be out of date. Please wait a minute or two while it refreshes.";
+  } else if (svcData.stale) {
+    warn = "Status updates are temporarily unavailable, so this list may be out of date.";
+  } else if (bot === "unknown") {
+    warn = 'We couldn’t verify that this data is up to date. Check the <a href="' + CH + '">Telegram channel</a> for announcements about issues.';
+  } else if (bot === "pending") {
+    warn = "Waiting for the first update from the service, so this data may be out of date.";
+  }
+
+  var present = {}, up = 0;
+  var rows = items.map(function (s) {
+    var g = GROUPS[s.status] ? s.status : "issue";
+    present[g] = true;
+    if (g === "available") up++;
+    var name = esc(s.name);
+    if (g === "available" && /^https?:\/\//.test(s.url || "")) {
+      name = '<a href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + name + "</a>";
+    }
+    return '<li class="item"><span class="nm">' + name + '</span><span class="tag" data-g="' + g + '">' + GROUPS[g][0] + "</span></li>";
+  }).join("");
+
+  var legend = ORDER.filter(function (g) { return present[g]; }).map(function (g) {
+    return "<li><b>" + GROUPS[g][0] + "</b> — " + GROUPS[g][1] + "</li>";
+  }).join("");
+
+  sum.textContent = up === items.length ? "All services are available."
+    : up + " of " + items.length + " services available.";
+  body.innerHTML = (warn ? note(warn) : "") +
+    '<ul class="list">' + rows + '</ul><ul class="legend">' + legend + "</ul>" +
+    (stampText() ? '<p class="stamp">' + stampText() + "</p>" : "");
+}
+
+/* ── loading ── */
+function loadJob(key) {
   var ctrl = new AbortController();
   var timer = setTimeout(function () { ctrl.abort(); }, 10000);
-  fetch(pill.dataset.src + "?t=" + Date.now(), { cache: "no-store", signal: ctrl.signal })
+  fetch(JOBS[key] + "?t=" + Date.now(), { cache: "no-store", signal: ctrl.signal })
     .then(function (r) { return r.text(); })
-    .then(function (svg) { apply(pill, parse(svg)); })
-    .catch(function () { apply(pill, { state: "unknown", label: "Unknown" }); })
-    .finally(function () { clearTimeout(timer); });
+    .then(function (svg) { gate[key] = parse(svg); })
+    .catch(function () { gate[key] = "unknown"; })
+    .finally(function () {
+      clearTimeout(timer);
+      checkedAt[key] = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      renderServer();
+      renderServices();
+    });
 }
 
+function getJSON(url, opts) {
+  return fetch(url, opts).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+}
+
+function loadData() {
+  getJSON(API_URL, { cache: "no-cache", headers: { Accept: "application/vnd.github.raw+json" } })
+    .catch(function () { return getJSON(DATA_URL + "?t=" + Date.now(), { cache: "no-store" }); })
+    .then(function (j) { svcData = j; svcFailed = false; })
+    .catch(function () { svcFailed = true; })
+    .finally(function () { renderServer(); renderServices(); });
+}
+
+var lastRefresh = 0;
 function refresh() {
-  document.querySelectorAll(".pill[data-src]").forEach(load);
+  lastRefresh = Date.now();
+  loadJob("server");
+  loadJob("bot");
+  loadData();
 }
 
+/* ── tabs ── */
+function setTab(name, save) {
+  if (name !== "server" && name !== "services") name = "server";
+  $("dock").dataset.active = name;
+  ["server", "services"].forEach(function (n) {
+    var panel = $("panel-" + n), on = n === name;
+    $("tab-" + n).setAttribute("aria-selected", on ? "true" : "false");
+    if (on && panel.hidden) {
+      panel.hidden = false;
+      panel.classList.remove("enter");
+      void panel.offsetWidth;
+      panel.classList.add("enter");
+    } else if (!on) {
+      panel.hidden = true;
+    }
+  });
+  if (save) {
+    window.scrollTo(0, 0);
+    try { history.replaceState(null, "", "#" + name); } catch (e) {}
+  }
+}
+
+document.querySelectorAll(".dock button").forEach(function (b) {
+  b.addEventListener("click", function () { setTab(b.dataset.tab, true); });
+});
+window.addEventListener("hashchange", function () { setTab(location.hash.slice(1), false); });
+document.addEventListener("visibilitychange", function () {
+  if (!document.hidden && Date.now() - lastRefresh > 15000) refresh();
+});
+
+renderServer();
+renderServices();
+setTab(location.hash.slice(1), false);
 refresh();
 setInterval(refresh, 60000);
 </script>
