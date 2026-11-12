@@ -20,6 +20,8 @@
   --gray: #8e8e93;
   --blue: #0a84ff;
   --pink: #ff2d55;
+  --yellow: #ffcc00;
+  --yellow-text: #c98a00;
   --purple: #af52de;
   --glass: rgba(255, 255, 255, .55);
   --glass-edge: rgba(255, 255, 255, .8);
@@ -41,6 +43,8 @@
     --red: #ff453a;
     --gray: #98989d;
     --pink: #ff375f;
+    --yellow: #ffd60a;
+    --yellow-text: #ffd60a;
     --purple: #bf5af2;
     --glass: rgba(50, 50, 54, .5);
     --glass-edge: rgba(255, 255, 255, .16);
@@ -58,30 +62,19 @@ body {
   color: var(--fg);
   font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   min-height: 100vh;
-  padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px));
   -webkit-font-smoothing: antialiased;
 }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ── header ── */
 header {
-  position: sticky;
+  position: absolute;
   top: 0;
+  right: 0;
   z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px;
-  background: var(--mat);
-  -webkit-backdrop-filter: var(--blur);
-  backdrop-filter: var(--blur);
-  border-bottom: 1px solid var(--line);
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 18px 0;
 }
-
-header h1 { margin: 0; font-size: 18px; font-weight: 700; }
 
 .actions { display: flex; align-items: center; gap: 16px; }
 
@@ -101,13 +94,12 @@ main { width: 100%; }
 .panel.enter { animation: rise .4s cubic-bezier(.2, .8, .2, 1); }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
 
-/* ── server tab: full-width hero ── */
 .hero {
   --c: var(--gray);
   position: relative;
   isolation: isolate;
-  min-height: calc(100vh - 240px);
-  min-height: calc(100svh - 240px);
+  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -116,7 +108,7 @@ main { width: 100%; }
   padding: 40px 24px;
 }
 .hero[data-state="online"]  { --c: var(--green); }
-.hero[data-state="late"]    { --c: var(--orange); }
+.hero[data-state="shutdown"] { --c: var(--orange); }
 .hero[data-state="offline"] { --c: var(--red); }
 .hero[data-state="pending"] { --c: var(--blue); }
 .hero[data-state="maintenance"] { --c: var(--purple); }
@@ -131,6 +123,7 @@ main { width: 100%; }
 }
 
 .orb {
+  position: relative;
   display: grid;
   place-items: center;
   width: 104px;
@@ -142,6 +135,20 @@ main { width: 100%; }
   margin-bottom: 36px;
 }
 .orb svg { width: 52px; height: 52px; }
+.orb .badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--yellow);
+  box-shadow: 0 0 0 4px var(--bg);
+}
+.orb .badge svg { width: 26px; height: 26px; stroke-width: 2.2; }
 .hero[data-state="loading"] .orb { animation: pulse 1.4s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .45; } }
 
@@ -172,87 +179,110 @@ main { width: 100%; }
 }
 .meta a { font-weight: 600; }
 
-/* ── services tab ── */
-.wrap { max-width: 600px; margin: 0 auto; padding: 28px 16px 8px; }
+.wrap { max-width: 720px; margin: 0 auto; padding: 96px 16px calc(120px + env(safe-area-inset-bottom, 0px)); }
 
 .wrap h2 {
   margin: 0;
+  text-align: center;
   font-size: 34px;
   line-height: 1.1;
   font-weight: 700;
   letter-spacing: -.025em;
 }
-.summary { margin: 6px 0 20px; color: var(--muted); font-size: 16px; }
+.summary { margin: 8px 0 28px; text-align: center; color: var(--muted); font-size: 16px; }
 
-.note {
+.notice summary {
+  --c: var(--yellow-text);
   display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  margin: 0 0 14px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  font-size: 14px;
-  line-height: 1.45;
-  color: var(--fg);
-  background: color-mix(in srgb, var(--orange) 15%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--orange) 30%, transparent);
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  list-style: none;
+  cursor: pointer;
+  color: var(--c);
 }
-.note svg { flex: none; width: 20px; height: 20px; margin-top: 1px; color: var(--orange); }
+.notice summary::-webkit-details-marker { display: none; }
+.notice summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-top: -3px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform .2s ease;
+}
+.notice[open] summary::after { margin-top: 3px; transform: rotate(-135deg); }
+.notice summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+.notice[data-k="off"] summary   { --c: var(--red); }
+.notice[data-k="shutdown"] summary { --c: var(--orange); }
+.notice[data-k="maint"] summary { --c: var(--purple); }
+.notice p { max-width: 34em; margin: 10px auto 0; font-size: 14px; line-height: 1.5; }
 
 .list {
   list-style: none;
   margin: 0;
   padding: 0;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 .item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 18px;
+  gap: 14px;
+  min-width: 0;
+  padding: 14px 20px 14px 0;
   font-size: 16px;
 }
-.item + .item { border-top: 1px solid var(--line); }
+.item:nth-child(even) { padding: 14px 0 14px 20px; }
+.item:nth-child(odd) { border-right: 1px solid var(--line); }
+.item:nth-child(n+3) { border-top: 1px solid var(--line); }
 .item .nm { min-width: 0; overflow-wrap: anywhere; }
 .item .nm a { color: inherit; }
 .item .nm a::after { content: "↗"; margin-left: 6px; font-size: .8em; color: var(--muted); }
 .item .nm a:hover { color: var(--accent); text-decoration: none; }
 
-.tag {
+.dot {
   --c: var(--gray);
   flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--c);
-  background: color-mix(in srgb, var(--c) 15%, transparent);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--c);
 }
-.tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.tag[data-g="available"] { --c: var(--green); }
-.tag[data-g="updating"]  { --c: var(--orange); }
-.tag[data-g="issue"]     { --c: var(--red); }
+.dot[data-g="available"] { --c: var(--green); }
+.dot[data-g="updating"]  { --c: var(--yellow); }
+.dot[data-g="maint"]     { --c: var(--purple); }
+.dot[data-g="issue"]     { --c: var(--red); }
 
-.legend { margin: 16px 6px 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; line-height: 1.5; }
-.legend li + li { margin-top: 4px; }
-.legend b { color: var(--fg); font-weight: 600; }
-.stamp { margin: 14px 6px 0; color: var(--muted); font-size: 13px; }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px 20px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  color: var(--muted);
+  font-size: 14px;
+}
+.legend li { display: inline-flex; align-items: center; gap: 8px; }
+.legend .dot { width: 12px; height: 12px; }
 
-.skel { height: 52px; }
-.skel + .skel { border-top: 1px solid var(--line); }
-.skel::after {
-  content: "";
-  display: block;
-  width: 40%;
+@media (max-width: 560px) {
+  .list { grid-template-columns: 1fr; }
+  .item, .item:nth-child(even) { padding: 14px 0; }
+  .item:nth-child(odd) { border-right: 0; }
+  .item:nth-child(n+2) { border-top: 1px solid var(--line); }
+}
+
+.stamp { margin: 24px 0 0; text-align: center; color: var(--muted); font-size: 13px; }
+
+.bar {
+  width: 50%;
   height: 12px;
-  margin: 20px 18px;
   border-radius: 6px;
   background: var(--line);
   animation: pulse 1.4s ease-in-out infinite;
@@ -264,18 +294,15 @@ main { width: 100%; }
   align-items: center;
   text-align: center;
   padding: 44px 24px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 20px;
 }
 .empty .orb { --c: var(--gray); width: 76px; height: 76px; margin-bottom: 24px; box-shadow: 0 0 0 9px color-mix(in srgb, var(--c) 7%, transparent); }
 .empty .orb svg { width: 38px; height: 38px; }
 .empty.off .orb { --c: var(--red); }
+.empty.shutdown .orb { --c: var(--orange); }
 .empty.maint .orb { --c: var(--purple); }
 .empty h3 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
 .empty p { margin: 10px 0 0; max-width: 26em; color: var(--muted); font-size: 15px; }
 
-/* ── dock ── */
 .dock {
   position: fixed;
   left: 50%;
@@ -334,14 +361,13 @@ main { width: 100%; }
 .dock button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .panel.enter, .orb, .skel::after { animation: none !important; }
-  .thumb, .dock button, .link { transition: none; }
+  .panel.enter, .orb, .bar { animation: none !important; }
+  .thumb, .dock button, .link, .notice summary::after { transition: none; }
 }
 </style>
 </head>
 <body>
 <header>
-  <h1>Server status</h1>
   <div class="actions">
     <a class="link" href="https://forms.gle/M2RTTSPE8Lpu8Dcc8" target="_blank" rel="noopener noreferrer">Feedback</a>
     <a class="link link-channel" href="https://t.me/RomashkaSystems">Channel</a>
@@ -364,7 +390,7 @@ main { width: 100%; }
   <section class="panel" id="panel-services" role="tabpanel" aria-labelledby="tab-services" hidden>
     <div class="wrap">
       <h2>Services</h2>
-      <p class="summary" id="svc-summary">Checking the services…</p>
+      <div class="summary" id="svc-summary">Checking the services…</div>
       <div id="svc-body"></div>
     </div>
   </section>
@@ -390,9 +416,9 @@ var JOBS = {
 var STATES = [
   { re: /\bhealthy\b|\bok\b|\bup\b/i, state: "online" },
   { re: /\blate\b|\bdelayed\b/i, state: "late" },
-  { re: /\bmissing\b|\bdown\b|\bfailed\b|\bmissed\b/i, state: "offline" },
+  { re: /\bmissing\b|\bdown\b|\bfailed\b|\bmissed\b|\bdisabled\b|\bpaused\b/i, state: "offline" },
   { re: /\bnew\b|\bwaiting\b|\bpending\b/i, state: "pending" },
-  { re: /\bunknown\b/i, state: "unknown" }
+  { re: /\bunknown\b/i, state: "offline" }
 ];
 
 function parse(svg) {
@@ -418,10 +444,11 @@ function icon(paths) {
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + paths + "</svg>";
 }
 
-/* ── server tab ── */
+var CLOCK = icon('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>');
+
 var ICONS = {
   online:  icon('<path d="M5 12.5l4.5 4.5L19 7.5"/>'),
-  late:    icon('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'),
+  issue:   icon('<path d="M12 3.5l9.5 16.5h-19L12 3.5z"/><path d="M12 10v4.5M12 17.5h.01"/>'),
   offline: icon('<path d="M12 3v8"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>'),
   pending: icon('<path d="M6 12h.01M12 12h.01M18 12h.01" stroke-width="3"/>'),
   maintenance: icon('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'),
@@ -432,8 +459,8 @@ var ICONS = {
 var SERVER_UI = {
   loading: ["Checking server…", "Checking the server…"],
   online:  ["Server is online", "The server is running and reachable, so all services should work as expected."],
-  late:    ["Server is delayed", "We haven’t heard from the server in a while, so there may be a problem. Please wait a minute or two while the status updates."],
-  offline: ["Server is offline", 'We’ve lost contact with the server, and this was not a planned shutdown. It may be a power or network issue. Check the <a href="' + CH + '">Telegram channel</a> for updates.'],
+  offline: ["Server issue", 'We’ve lost contact with the server, and this was not a planned shutdown. It may be a power or network issue. Check the <a href="' + CH + '">Telegram channel</a> for updates.'],
+  shutdown: ["Server is turned off", 'The server was turned off on purpose, most likely for a longer time. Details are in the <a href="' + CH + '">Telegram channel</a>.'],
   maintenance: ["Technical maintenance", 'The server is temporarily stopped for planned maintenance and will be back soon. News and updates are in the <a href="' + CH + '">Telegram channel</a>.'],
   pending: ["Waiting for server", "Waiting for the first check-in from the server."],
   unknown: ["Status unknown", 'The status is unavailable at the moment. Check the <a href="' + CH + '">Telegram channel</a> for any announcements about issues.']
@@ -445,41 +472,41 @@ function supervisorStopped() {
 
 function serverState() {
   var st = gate.server;
-  if (st === "offline" || st === "late" || st === "unknown") {
+  if (st === "online" || st === "late" || st === "offline") {
     if (!svcData && !svcFailed) return "loading";
-    if (supervisorStopped()) return "maintenance";
+    var planned = supervisorStopped();
+    if (st === "offline") return planned ? "shutdown" : "offline";
+    return planned ? "maintenance" : "online";
   }
   return st;
 }
 
 function renderServer() {
   var st = serverState(), ui = SERVER_UI[st] || SERVER_UI.unknown;
+  var delayed = st === "online" && gate.server === "late";
   $("hero").dataset.state = st;
-  $("orb").innerHTML = ICONS[st] || ICONS.unknown;
+  $("orb").innerHTML = (ICONS[st] || ICONS.unknown) +
+    (delayed ? '<span class="badge" role="img" aria-label="Check-in delayed" title="Check-in delayed">' + CLOCK + "</span>" : "");
   $("hero-title").textContent = ui[0];
   $("hero-msg").innerHTML = ui[1];
   $("hero-time").textContent = checkedAt.server ? "Checked " + checkedAt.server : "";
 }
 
-/* ── services tab ── */
 var GROUPS = {
-  available:   ["Available",   "this service is working normally."],
-  updating:    ["Updating",    "this service will be back shortly."],
-  issue:       ["Issue",       "some users may be experiencing problems with this service."],
-  unavailable: ["Unavailable", "this service is not available right now."]
+  available:   "Available",
+  maint:       "Maintenance",
+  updating:    "Updating",
+  issue:       "Issue",
+  unavailable: "Unavailable"
 };
-var ORDER = ["available", "updating", "issue", "unavailable"];
-
-var WARN = icon('<path d="M12 3.5l9.5 16.5h-19L12 3.5z"/><path d="M12 10v4.5M12 17.5h.01"/>');
+var ORDER = ["issue", "updating", "maint", "available", "unavailable"];
+var RANK = { issue: 0, updating: 1, maint: 1, available: 2, unavailable: 3 };
+var BOT_STATUS = { online: "available", late: "available", pending: "updating", offline: "issue", unknown: "issue" };
 
 function emptyState(kind, title, text) {
-  var ic = kind === "off" ? ICONS.offline : kind === "maint" ? ICONS.maintenance : ICONS.unknown;
+  var ic = kind === "off" ? ICONS.issue : kind === "shutdown" ? ICONS.offline : kind === "maint" ? ICONS.maintenance : ICONS.unknown;
   return '<div class="empty' + (kind ? " " + kind : "") + '"><div class="orb" aria-hidden="true">' +
     ic + "</div><h3>" + title + "</h3><p>" + text + "</p></div>";
-}
-
-function note(text) {
-  return '<div class="note" role="status">' + WARN + "<span>" + text + "</span></div>";
 }
 
 function stampText() {
@@ -488,74 +515,105 @@ function stampText() {
   return "Last change: " + d.toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+var noticeOpen = false;
+
+function notice(kind, title, text) {
+  return '<details class="notice" data-k="' + kind + '"' + (noticeOpen ? " open" : "") + "><summary>" + title + "</summary><p>" + text + "</p></details>";
+}
+
 function renderServices() {
   var body = $("svc-body"), sum = $("svc-summary");
   var bot = gate.bot, srv = gate.server;
 
   if (bot === "loading" || srv === "loading" || (!svcData && !svcFailed)) {
     sum.textContent = "Checking the services…";
-    body.innerHTML = '<ul class="list" aria-hidden="true"><li class="skel"></li><li class="skel"></li><li class="skel"></li><li class="skel"></li></ul>';
-    return;
-  }
-
-  if (supervisorStopped() && !(bot === "online" && srv === "online")) {
-    sum.textContent = "Services are temporarily paused.";
-    body.innerHTML = emptyState("maint", "Technical maintenance",
-      'The server is stopped for planned work and will be back soon. News and updates are in the <a href="' + CH + '">Telegram channel</a>.') +
-      (stampText() ? '<p class="stamp">' + stampText() + "</p>" : "");
-    return;
-  }
-
-  if (bot === "offline" || srv === "offline") {
-    sum.textContent = "Services are unavailable.";
-    body.innerHTML = emptyState("off", "The server is not responding",
-      'This was not a planned shutdown, so the list below can’t be trusted and all services are treated as unavailable. Check the <a href="' + CH + '">Telegram channel</a> for updates.');
+    body.innerHTML = '<ul class="list" aria-hidden="true">' + '<li class="item"><span class="bar"></span></li>'.repeat(6) + "</ul>";
     return;
   }
 
   var items = svcData && Array.isArray(svcData.services) ? svcData.services : [];
+  var up = srv === "online" || srv === "late";
+  var planned = supervisorStopped();
+  var link = '<a href="' + CH + '">Telegram channel</a>';
+  var n = null;
+
+  if (planned && srv === "offline") {
+    n = ["shutdown", "Server is turned off",
+      "The server was turned off on purpose, most likely for a longer time, so all services are unavailable. Details are in the " + link + "."];
+  } else if (planned && up) {
+    n = ["maint", "Technical maintenance",
+      "Services are stopped for planned technical work and will be back soon. Services that were available are marked as under maintenance. News and updates are in the " + link + "."];
+  } else if (srv === "offline") {
+    n = ["off", "Server issue",
+      "We’ve lost contact with the server, and this was not a planned shutdown. Services that were marked available may be having problems. Check the " + link + " for updates."];
+  }
+
   if (!items.length) {
-    sum.textContent = "Service data is unavailable.";
-    body.innerHTML = emptyState("", "No data right now",
-      'Check the <a href="' + CH + '">Telegram channel</a> for the latest status.');
+    if (n) {
+      sum.textContent = "";
+      body.innerHTML = emptyState(n[0], n[1], n[2]) + (stampText() ? '<p class="stamp">' + stampText() + "</p>" : "");
+    } else {
+      sum.textContent = "Service data is unavailable.";
+      body.innerHTML = emptyState("", "No data right now", "Check the " + link + " for the latest status.");
+    }
     return;
   }
 
-  var warn = "";
-  if (bot === "late") {
-    warn = "The service that updates this list missed a scheduled update, so the data may be out of date. Please wait a minute or two while it refreshes.";
-  } else if (svcData.stale) {
-    warn = "Status updates are temporarily unavailable, so this list may be out of date.";
-  } else if (bot === "unknown") {
-    warn = 'We couldn’t verify that this data is up to date. Check the <a href="' + CH + '">Telegram channel</a> for announcements about issues.';
-  } else if (bot === "pending") {
-    warn = "Waiting for the first update from the service, so this data may be out of date.";
+  if (!n) {
+    if (bot === "offline") {
+      n = ["warn", "Data may be out of date", "The service that updates statuses is not responding, so this list may be out of date. The server itself is running."];
+    } else if (bot === "pending" || srv === "pending") {
+      n = ["warn", "Waiting for the first update", "Waiting for the first update from the service, so this data may be out of date."];
+    } else if (svcData.stale) {
+      n = ["warn", "Data may be out of date", "Status updates are temporarily unavailable, so this list may be out of date."];
+    } else if (bot === "unknown" || srv === "unknown") {
+      n = ["warn", "Can’t verify the data", "We couldn’t verify that this data is up to date. Check the " + link + " for announcements about issues."];
+    }
   }
 
-  var present = {}, up = 0;
-  var rows = items.map(function (s) {
-    var g = GROUPS[s.status] ? s.status : "issue";
+  items = items.filter(function (s) { return s.name !== "Status API"; })
+    .concat([{ name: "Status API", status: BOT_STATUS[bot] || "issue", url: "" }]);
+
+  var mode = n ? n[0] : "";
+  var present = {}, avail = 0;
+  var list = items.map(function (s) {
+    var st = s.status;
+    if (mode === "shutdown") st = "unavailable";
+    else if (st === "available" && mode === "off") st = "issue";
+    else if (st === "available" && mode === "maint") st = "maint";
+    else if (mode === "maint" && s.name === "Status API") st = "maint";
+    var g = GROUPS[st] ? st : "issue";
     present[g] = true;
-    if (g === "available") up++;
-    var name = esc(s.name);
-    if (g === "available" && /^https?:\/\//.test(s.url || "")) {
-      name = '<a href="' + esc(s.url) + '" target="_blank" rel="noopener noreferrer">' + name + "</a>";
+    if (g === "available") avail++;
+    return { g: g, s: s };
+  });
+
+  list.sort(function (a, b) { return RANK[a.g] - RANK[b.g]; });
+
+  var rows = list.map(function (o) {
+    var g = o.g, name = esc(o.s.name);
+    if (g === "available" && /^https?:\/\//.test(o.s.url || "")) {
+      name = '<a href="' + esc(o.s.url) + '" target="_blank" rel="noopener noreferrer">' + name + "</a>";
     }
-    return '<li class="item"><span class="nm">' + name + '</span><span class="tag" data-g="' + g + '">' + GROUPS[g][0] + "</span></li>";
+    return '<li class="item"><span class="dot" data-g="' + g + '" role="img" aria-label="' + GROUPS[g] + '" title="' + GROUPS[g] + '"></span><span class="nm">' + name + "</span></li>";
   }).join("");
 
   var legend = ORDER.filter(function (g) { return present[g]; }).map(function (g) {
-    return "<li><b>" + GROUPS[g][0] + "</b> — " + GROUPS[g][1] + "</li>";
+    return '<li><span class="dot" data-g="' + g + '" aria-hidden="true"></span>' + GROUPS[g] + "</li>";
   }).join("");
 
-  sum.textContent = up === items.length ? "All services are available."
-    : up + " of " + items.length + " services available.";
-  body.innerHTML = (warn ? note(warn) : "") +
-    '<ul class="list">' + rows + '</ul><ul class="legend">' + legend + "</ul>" +
+  if (n) {
+    sum.innerHTML = notice(n[0], n[1], n[2]);
+    var d = sum.querySelector("details");
+    d.addEventListener("toggle", function () { noticeOpen = d.open; });
+  } else {
+    sum.textContent = avail === items.length ? "All services are available." : avail + " of " + items.length + " services available.";
+  }
+
+  body.innerHTML = '<ul class="legend">' + legend + '</ul><ul class="list">' + rows + "</ul>" +
     (stampText() ? '<p class="stamp">' + stampText() + "</p>" : "");
 }
 
-/* ── loading ── */
 function loadJob(key) {
   var ctrl = new AbortController();
   var timer = setTimeout(function () { ctrl.abort(); }, 10000);
@@ -591,7 +649,6 @@ function refresh() {
   loadData();
 }
 
-/* ── tabs ── */
 function setTab(name, save) {
   if (name !== "server" && name !== "services") name = "server";
   $("dock").dataset.active = name;
